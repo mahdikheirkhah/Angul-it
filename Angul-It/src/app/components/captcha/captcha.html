@@ -1,1 +1,16 @@
-<p>captcha works!</p>
+<div class="captcha-container">
+  <form [formGroup]="captchaForm" (ngSubmit)="onSubmit()">
+    <h2>{{ challenge.prompt }}</h2>
+
+    <div class="image-grid">
+      <div *ngFor="let image of challenge.images"
+           class="grid-item"
+           (click)="toggleSelection(image)"
+           [class.selected]="image.selected">
+        <img [attr.src]="image.src" [attr.alt]="image.alt">
+      </div>
+    </div>
+
+    <button type="submit" class="submit-btn" [disabled]="!captchaForm.valid">Next</button>
+  </form>
+</div>
