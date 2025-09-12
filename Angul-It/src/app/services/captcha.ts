@@ -103,4 +103,37 @@ export class CaptchaService {
       this.initializeChallenges();
     }
   }
+  // Add this method inside the CaptchaService class
+
+  getResults() {
+    // Simple scoring logic
+    let correctSelections = 0;
+    let totalCorrectOptions = 0;
+
+    this.challenges.forEach((challenge, index) => {
+      const userSelection = this.userAnswers[index] || [];
+      const userSelectedSources = userSelection.map(img => img.src);
+
+      challenge.images.forEach(image => {
+        const wasSelected = userSelectedSources.includes(image.src);
+        if (image.isCorrect) {
+          totalCorrectOptions++;
+          if (wasSelected) {
+            correctSelections++;
+          }
+        } else {
+          // Penalty for incorrect selections
+          if (wasSelected) {
+            correctSelections--;
+          }
+        }
+      });
+    });
+
+    return {
+      score: Math.max(0, (correctSelections / totalCorrectOptions) * 100), // Ensure score is not negative
+      challenges: this.challenges,
+      userAnswers: this.userAnswers
+    };
+  }
 }

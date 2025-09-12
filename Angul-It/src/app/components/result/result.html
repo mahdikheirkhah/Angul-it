@@ -1,1 +1,10 @@
-<p>result works!</p>
+<div class="result-container" *ngIf="results">
+  <h1>Challenge Complete!</h1>
+  <p class="score">Your Score: {{ results.score.toFixed(0) }}%</p>
+
+  <button (click)="startNewChallenge()">Start New Challenge</button>
+</div>
+
+<div class="result-container" *ngIf="!results">
+  <p>Loading results...</p>
+</div>
