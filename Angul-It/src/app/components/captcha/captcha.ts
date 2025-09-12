@@ -1,62 +1,68 @@
-import { Component, OnInit } from '@angular/core'; // Import OnInit
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; // Import form tools
-// Define a "shape" for our image objects for type safety
-interface CaptchaImage {
-  src: string;
-  alt: string;
-  selected: boolean;
-}
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+
+// 1. Corrected the import path and created an alias
+import { CaptchaService, CaptchaChallenge } from '../../services/captcha';
 
 @Component({
   selector: 'app-captcha',
-  standalone: true, // This component manages its own dependencies
-  imports: [CommonModule, ReactiveFormsModule], // Import CommonModule here
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './captcha.html',
   styleUrl: './captcha.css'
 })
-export class Captcha implements OnInit {
+export class Captcha implements OnInit { // This is the component class
   captchaForm!: FormGroup;
-  // Our challenge data
-  challenge = {
-    prompt: 'Please select all images containing a mountain.',
-    images: [
-      { src: 'https://placehold.co/150x150/f2f2f2/000?text=Mountain', alt: 'Mountain 1', selected: false },
-      { src: 'https://placehold.co/150x150/f2f2f2/000?text=Car', alt: 'Car 1', selected: false },
-      { src: 'https://placehold.co/150x150/f2f2f2/000?text=Mountain', alt: 'Mountain 2', selected: false },
-      { src: 'https://placehold.co/150x150/f2f2f2/000?text=Beach', alt: 'Beach 1', selected: false },
-      { src: 'https://placehold.co/150x150/f2f2f2/000?text=Mountain', alt: 'Mountain 3', selected: false },
-      { src: 'https://placehold.co/150x150/f2f2f2/000?text=Tree', alt: 'Tree 1', selected: false },
-      { src: 'https://placehold.co/150x150/f2f2f2/000?text=Car', alt: 'Car 2', selected: false },
-      { src: 'https://placehold.co/150x150/f2f2f2/000?text=Beach', alt: 'Beach 2', selected: false },
-      { src: 'https://placehold.co/150x150/f2f2f2/000?text=Mountain', alt: 'Mountain 4', selected: false },
-    ] as CaptchaImage[]
-  };
-constructor(private fb: FormBuilder) {}
+  challenge!: CaptchaChallenge;
 
-  // 2. Set up the form when the component initializes
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private captchaService: CaptchaService // 2. Use the alias here
+  ) {}
+
   ngOnInit(): void {
+    this.loadCurrentChallenge();
     this.captchaForm = this.fb.group({
       selections: [[], [Validators.required, Validators.minLength(1)]]
     });
   }
 
-  toggleSelection(image: CaptchaImage): void {
+  loadCurrentChallenge(): void {
+    const current = this.captchaService.getCurrentChallenge();
+    if (current) {
+      this.challenge = current;
+    } else {
+      this.router.navigate(['/result']);
+    }
+  }
+
+  toggleSelection(image: any): void {
     image.selected = !image.selected;
-    this.updateFormSelections(); // 3. Update the form when a selection changes
+    this.updateFormSelections();
   }
 
   private updateFormSelections(): void {
-    // 4. Get all currently selected images
     const selectedImages = this.challenge.images.filter(img => img.selected);
-    // 5. Update the value of the 'selections' form control
     this.captchaForm.controls['selections'].setValue(selectedImages);
   }
 
   onSubmit(): void {
-    if (this.captchaForm.valid) {
-      console.log('Form Submitted!', this.captchaForm.value);
-      // We will add navigation logic here later
+    if (this.captchaForm.invalid) {
+      return;
+    }
+
+    const hasMoreChallenges = this.captchaService.submitAnswer(
+      this.captchaForm.value.selections
+    );
+
+    if (hasMoreChallenges) {
+      this.loadCurrentChallenge();
+      this.captchaForm.reset({ selections: [] });
+    } else {
+      this.router.navigate(['/result']);
     }
   }
 }
