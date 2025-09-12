@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core';
 
-// This is the same interface from our CaptchaComponent
 interface CaptchaImage {
   src: string;
   alt: string;
   selected: boolean;
-  isCorrect?: boolean; // We'll use this later
+  isCorrect?: boolean;
 }
 
 export interface CaptchaChallenge {
@@ -20,13 +19,13 @@ export class CaptchaService {
   private challenges: CaptchaChallenge[] = [];
   private currentChallengeIndex = 0;
   private userAnswers: CaptchaImage[][] = [];
-
+  private inProgressSelections: CaptchaImage[] = [];
   constructor() {
     this.loadState(); // Try to load saved state when the app starts
   }
 
-  // Set up all the challenges for this session
-  private initializeChallenges(): void {
+  // CHANGE 1: Renamed this method. Its only job now is to define the challenges.
+  private _loadChallengeDefinitions(): void {
     this.challenges = [
       {
         prompt: 'Please select all images containing a mountain.',
@@ -47,29 +46,36 @@ export class CaptchaService {
         ]
       }
     ];
-    this.currentChallengeIndex = 0;
-    this.userAnswers = [];
   }
 
   getCurrentChallenge(): CaptchaChallenge | null {
+    // This logic is now safe because the constructor handles loading correctly.
     if (this.challenges.length === 0) {
-      this.initializeChallenges();
+      this.reset();
       this.saveState();
     }
 
     if (this.currentChallengeIndex >= this.challenges.length) {
-      return null; // No more challenges
+      return null;
     }
     return this.challenges[this.currentChallengeIndex];
   }
+    // CHANGE 2: New method to get the saved in-progress work.
+    getInProgressSelections(): CaptchaImage[] {
+      return this.inProgressSelections;
+    }
 
-  // Records the answer and moves to the next challenge
+    // CHANGE 3: New method to update in-progress work, called on every click.
+    updateInProgressSelections(selections: CaptchaImage[]): void {
+      this.inProgressSelections = selections;
+      this.saveState(); // Auto-save on every change.
+    }
   submitAnswer(selectedImages: CaptchaImage[]): boolean {
     this.userAnswers[this.currentChallengeIndex] = selectedImages;
     this.currentChallengeIndex++;
+    // CHANGE 4: Clear in-progress work after submitting.
+    this.inProgressSelections = [];
     this.saveState();
-
-    // Return true if there are more challenges, false otherwise
     return this.currentChallengeIndex < this.challenges.length;
   }
 
@@ -77,36 +83,42 @@ export class CaptchaService {
     return this.currentChallengeIndex >= this.challenges.length;
   }
 
+  // CHANGE 2: The reset method now clearly defines a new session.
   reset(): void {
-    this.initializeChallenges();
+    this._loadChallengeDefinitions();
+    this.currentChallengeIndex = 0;
+    this.userAnswers = [];
+    this.inProgressSelections = [];
     this.saveState();
   }
 
-  // --- Persistence with localStorage ---
   private saveState(): void {
     const state = {
       index: this.currentChallengeIndex,
-      answers: this.userAnswers
+      answers: this.userAnswers,
+      inProgress: this.inProgressSelections
     };
     localStorage.setItem('captchaState', JSON.stringify(state));
   }
 
   private loadState(): void {
+    this._loadChallengeDefinitions();
     const savedState = localStorage.getItem('captchaState');
     if (savedState) {
       const state = JSON.parse(savedState);
       this.currentChallengeIndex = state.index;
       this.userAnswers = state.answers;
-      // We still need the main challenge data
-      this.initializeChallenges();
+      // CHANGE 7: Load the in-progress selections.
+      this.inProgressSelections = state.inProgress || [];
     } else {
-      this.initializeChallenges();
+      this.currentChallengeIndex = 0;
+      this.userAnswers = [];
+      this.inProgressSelections = [];
     }
   }
-  // Add this method inside the CaptchaService class
 
   getResults() {
-    // Simple scoring logic
+    // Simple scoring logic - This method remains unchanged.
     let correctSelections = 0;
     let totalCorrectOptions = 0;
 
@@ -122,7 +134,6 @@ export class CaptchaService {
             correctSelections++;
           }
         } else {
-          // Penalty for incorrect selections
           if (wasSelected) {
             correctSelections--;
           }
@@ -131,7 +142,7 @@ export class CaptchaService {
     });
 
     return {
-      score: Math.max(0, (correctSelections / totalCorrectOptions) * 100), // Ensure score is not negative
+      score: Math.max(0, (correctSelections / totalCorrectOptions) * 100),
       challenges: this.challenges,
       userAnswers: this.userAnswers
     };
