@@ -13,64 +13,74 @@ import { CaptchaService, CaptchaChallenge } from '../../services/captcha';
   templateUrl: './captcha.html',
   styleUrl: './captcha.css'
 })
-export class Captcha implements OnInit { // This is the component class
+export class Captcha implements OnInit {
   captchaForm!: FormGroup;
   challenge!: CaptchaChallenge;
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private captchaService: CaptchaService // 2. Use the alias here
+    private captchaService: CaptchaService
   ) {}
 
   ngOnInit(): void {
     this.loadCurrentChallenge();
-    this.captchaForm = this.fb.group({
-      selections: [[], [Validators.required, Validators.minLength(1)]]
-    });
-    this.updateFormSelections()
   }
 
- loadCurrentChallenge(): void {
-   const current = this.captchaService.getCurrentChallenge();
-   if (current) {
-     this.challenge = current;
-     const inProgressSelections = this.captchaService.getInProgressSelections();
-     const inProgressAlts = inProgressSelections.map(img => img.alt);
-     this.challenge.images.forEach(image => {
-       image.selected = inProgressAlts.includes(image.alt);
-     });
-
-   } else {
-     this.router.navigate(['/result']);
-   }
- }
+  loadCurrentChallenge(): void {
+    const current = this.captchaService.getCurrentChallenge();
+    if (current) {
+      this.challenge = current;
+      if (current.type === 'image') {
+        // If there are no correct images, don't require selection
+        const requireSelection = current.answer.length > 0;
+        this.captchaForm = this.fb.group({
+          selections: [[], requireSelection ? [Validators.required, Validators.minLength(1)] : []]
+        });
+        this.updateFormSelections();
+      } else if (current.type === 'math') {
+        this.captchaForm = this.fb.group({
+          answer: ['', [Validators.required, Validators.pattern(/^-?\d+$/)]]
+        });
+      } else if (current.type === 'text') {
+        this.captchaForm = this.fb.group({
+          answer: ['', [Validators.required, Validators.maxLength(6)]]
+        });
+      }
+    } else {
+      this.router.navigate(['/result']);
+    }
+  }
 
   toggleSelection(image: any): void {
-    image.selected = !image.selected;
-    this.updateFormSelections();
+    if (this.challenge.type === 'image') {
+      image.selected = !image.selected;
+      this.updateFormSelections();
+    }
   }
 
   private updateFormSelections(): void {
-    const selectedImages = this.challenge.images.filter(img => img.selected);
-    // Update the form for validation
-    this.captchaForm.controls['selections'].setValue(selectedImages);
-    // CHANGE 2: Tell the service about the latest selections to auto-save.
-    this.captchaService.updateInProgressSelections(selectedImages);
+    if (this.challenge.type === 'image') {
+      const selectedImages = this.challenge.images?.filter(img => img.selected) || [];
+      this.captchaForm.controls['selections'].setValue(selectedImages);
+      this.captchaService.updateInProgressSelections(selectedImages);
+    }
   }
 
   onSubmit(): void {
     if (this.captchaForm.invalid) {
       return;
     }
-
-    const hasMoreChallenges = this.captchaService.submitAnswer(
-      this.captchaForm.value.selections
-    );
-
+    let answer;
+    if (this.challenge.type === 'image') {
+      answer = this.captchaForm.value.selections;
+    } else if (this.challenge.type === 'math' || this.challenge.type === 'text') {
+      answer = this.captchaForm.value.answer;
+    }
+    const hasMoreChallenges = this.captchaService.submitAnswer(answer);
     if (hasMoreChallenges) {
       this.loadCurrentChallenge();
-      this.captchaForm.reset({ selections: [] });
+      this.captchaForm.reset();
     } else {
       this.router.navigate(['/result']);
     }
