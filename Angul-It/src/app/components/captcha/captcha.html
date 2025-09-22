@@ -2,7 +2,7 @@
   <form [formGroup]="captchaForm" (ngSubmit)="onSubmit()">
     <h2>{{ challenge.prompt }}</h2>
 
-    <div *ngIf="challenge.type === 'math'" class="math-challenge">
+    <div *ngIf="challenge.type === 'math'" class="challenge-area">
       <app-captcha-image [text]="challenge.math!.a + ' ' + challenge.math!.op + ' ' + challenge.math!.b"></app-captcha-image>
       <input type="text"
              formControlName="answer"
@@ -10,7 +10,7 @@
              autocomplete="off">
     </div>
 
-    <div *ngIf="challenge.type === 'text'" class="text-challenge">
+    <div *ngIf="challenge.type === 'text'" class="challenge-area">
       <app-captcha-image [text]="challenge.text!.value"></app-captcha-image>
       <input type="text"
              formControlName="answer"

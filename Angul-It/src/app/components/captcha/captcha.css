@@ -4,35 +4,6 @@
   text-align: center;
 }
 
-.image-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 1.5rem;
-}
-
-.grid-item {
-  border: 3px solid transparent; /* Start with a transparent border */
-  border-radius: 8px;
-  cursor: pointer;
-  transition: border-color 0.2s ease-in-out;
-}
-
-.grid-item:hover {
-  border-color: #ccc;
-}
-
-.grid-item.selected {
-  border-color: #007bff; /* Blue border when selected */
-}
-
-.grid-item img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 5px;
-}
-
 .submit-btn {
   padding: 10px 20px;
   font-size: 16px;
@@ -41,17 +12,17 @@
   border-radius: 5px;
   background-color: #28a745;
   color: white;
+  margin-top: 1rem;
 }
 .submit-btn:disabled {
   background-color: #6c757d; /* A muted grey color */
   cursor: not-allowed;
 }
 
-.math-challenge input,
-.text-challenge input {
+.challenge-area input {
   padding: 8px;
   font-size: 18px;
-  width: 180px;
+  width: 200px;
   margin: 1rem auto;
   display: block;
   border-radius: 5px;

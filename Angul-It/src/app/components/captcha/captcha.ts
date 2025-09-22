@@ -30,7 +30,6 @@ export class Captcha implements OnInit, OnDestroy {
     this.loadCurrentChallenge();
   }
 
-  // This is a lifecycle hook that runs when the component is destroyed
   ngOnDestroy(): void {
     // Unsubscribe to prevent memory leaks
     if (this.formSub) {
@@ -42,19 +41,17 @@ export class Captcha implements OnInit, OnDestroy {
     const current = this.captchaService.getCurrentChallenge();
     if (current) {
       this.challenge = current;
-      this.buildFormForChallenge(); // Build the correct form
+      this.buildFormForChallenge();
     } else {
       this.router.navigate(['/result']);
     }
   }
 
   private buildFormForChallenge(): void {
-    // Unsubscribe from any previous form's valueChanges listener
     if (this.formSub) {
       this.formSub.unsubscribe();
     }
 
-    // Simplified form creation for math or text
     if (this.challenge.type === 'math') {
       this.captchaForm = this.fb.group({
         answer: ['', [Validators.required, Validators.pattern(/^-?\d+$/)]]
@@ -65,13 +62,11 @@ export class Captcha implements OnInit, OnDestroy {
       });
     }
 
-    // Restore any in-progress answer from the service
     const inProgressAnswer = this.captchaService.getInProgressSelections();
     if (inProgressAnswer) {
       this.captchaForm.patchValue({ answer: inProgressAnswer });
     }
 
-    // Auto-save the user's input as they type
     this.formSub = this.captchaForm.controls['answer'].valueChanges.pipe(
       debounceTime(500) // Wait 500ms after the user stops typing
     ).subscribe(value => {
@@ -84,7 +79,6 @@ export class Captcha implements OnInit, OnDestroy {
       return;
     }
 
-    // Simplified submission logic
     const answer = this.captchaForm.value.answer;
     const hasMoreChallenges = this.captchaService.submitAnswer(answer);
 
