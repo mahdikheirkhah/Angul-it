@@ -3,4 +3,9 @@
   border-radius: 5px;
   display: block;
   margin: 1rem auto;
+  
+  /* Add these lines to make it responsive */
+  width: 100%;
+  height: auto;
+  max-width: 200px; /* Don't let it get bigger than its original size */
 }

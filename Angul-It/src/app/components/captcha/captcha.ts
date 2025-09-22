@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { trigger, transition, style, animate } from '@angular/animations'; // <-- Import is needed
 
 import { CaptchaService, CaptchaChallenge } from '../../services/captcha';
 import { CaptchaImage } from '../captcha-image/captcha-image';
@@ -13,12 +14,22 @@ import { CaptchaImage } from '../captcha-image/captcha-image';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, CaptchaImage],
   templateUrl: './captcha.html',
-  styleUrl: './captcha.css'
+  styleUrl: './captcha.css',
+  // THIS IS THE MISSING PIECE
+  animations: [
+    trigger('challengeAnimation', [
+      transition('* => *', [
+        style({ opacity: 0, transform: 'translateX(50px)' }),
+        animate('300ms ease-in-out', style({ opacity: 1, transform: 'translateX(0)' }))
+      ])
+    ])
+  ]
 })
 export class Captcha implements OnInit, OnDestroy {
   captchaForm!: FormGroup;
   challenge!: CaptchaChallenge;
-  private formSub!: Subscription; // To manage our auto-save subscription
+  private formSub!: Subscription;
+  animationState: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -31,7 +42,6 @@ export class Captcha implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Unsubscribe to prevent memory leaks
     if (this.formSub) {
       this.formSub.unsubscribe();
     }
@@ -40,6 +50,7 @@ export class Captcha implements OnInit, OnDestroy {
   loadCurrentChallenge(): void {
     const current = this.captchaService.getCurrentChallenge();
     if (current) {
+      this.animationState = !this.animationState;
       this.challenge = current;
       this.buildFormForChallenge();
     } else {
@@ -51,7 +62,6 @@ export class Captcha implements OnInit, OnDestroy {
     if (this.formSub) {
       this.formSub.unsubscribe();
     }
-
     if (this.challenge.type === 'math') {
       this.captchaForm = this.fb.group({
         answer: ['', [Validators.required, Validators.pattern(/^-?\d+$/)]]
@@ -68,7 +78,7 @@ export class Captcha implements OnInit, OnDestroy {
     }
 
     this.formSub = this.captchaForm.controls['answer'].valueChanges.pipe(
-      debounceTime(500) // Wait 500ms after the user stops typing
+      debounceTime(500)
     ).subscribe(value => {
       this.captchaService.updateInProgressSelections(value);
     });
@@ -78,7 +88,6 @@ export class Captcha implements OnInit, OnDestroy {
     if (this.captchaForm.invalid) {
       return;
     }
-
     const answer = this.captchaForm.value.answer;
     const hasMoreChallenges = this.captchaService.submitAnswer(answer);
 

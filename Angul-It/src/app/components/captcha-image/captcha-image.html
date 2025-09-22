@@ -1,13 +1,13 @@
-<svg [attr.width]="svgWidth" [attr.height]="svgHeight" class="captcha-svg">
+<svg [attr.viewBox]="'0 0 ' + svgWidth + ' ' + svgHeight" class="captcha-svg">
   <circle *ngFor="let dot of noiseDots"
           [attr.cx]="dot.cx" [attr.cy]="dot.cy"
-          [attr.r]="dot.r" [attr.fill]="dot.fill" />
-
+          [attr.r]="dot.r" [attr.fill]="dot.fill"
+          fill-opacity="0.5" />
   <line *ngFor="let line of noiseLines"
         [attr.x1]="line.x1" [attr.y1]="line.y1"
         [attr.x2]="line.x2" [attr.y2]="line.y2"
-        [attr.stroke]="line.color" stroke-width="1" />
-
+        [attr.stroke]="line.color" stroke-width="1"
+        stroke-opacity="0.7" />
   <text *ngFor="let c of chars"
         [attr.x]="c.x" [attr.y]="c.y"
         [attr.fill]="c.color"

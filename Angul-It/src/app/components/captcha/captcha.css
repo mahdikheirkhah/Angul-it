@@ -34,3 +34,14 @@
   font-size: 14px;
   margin-top: 5px;
 }
+/* Media query for screens 600px wide or smaller */
+@media (max-width: 600px) {
+  /* Selects the main container in each component */
+  .home-container,
+  .captcha-container,
+  .result-container {
+    /* Reduce margins and padding for a better mobile fit */
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}

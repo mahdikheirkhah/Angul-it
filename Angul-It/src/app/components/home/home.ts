@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router'; // 1. Import the Router
+import { CaptchaService } from '../../services/captcha';
 
 @Component({
   selector: 'app-home',
@@ -8,11 +9,20 @@ import { Router } from '@angular/router'; // 1. Import the Router
 })
 export class Home {
 
-  // 2. Inject the Router service in the constructor
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private captchaService: CaptchaService
+  ) {}
 
-  // 3. Create the method that will be called on button click
   startChallenge(): void {
+    // Check if the current session in the service is already marked as completed.
+    if (this.captchaService.isCompleted()) {
+      // If it is complete, then we generate a new set of challenges.
+      this.captchaService.reset();
+    }
+
+    // Now, navigate to the captcha page. This will either be the brand new
+    // session we just created, or the one that was already in progress.
     this.router.navigate(['/captcha']);
   }
 }
