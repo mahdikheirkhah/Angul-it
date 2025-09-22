@@ -2,45 +2,26 @@
   <form [formGroup]="captchaForm" (ngSubmit)="onSubmit()">
     <h2>{{ challenge.prompt }}</h2>
 
-    <!-- Image challenge -->
-    <div *ngIf="challenge.type === 'image'" class="image-grid">
-      <div *ngFor="let image of challenge.images"
-           class="grid-item"
-           (click)="toggleSelection(image)"
-           [class.selected]="image.selected">
-        <img [attr.src]="image.src" [attr.alt]="image.alt"
-             (error)="image.src='https://via.placeholder.com/100?text=No+Image'">
-      </div>
-    </div>
-
-    <!-- Math challenge -->
     <div *ngIf="challenge.type === 'math'" class="math-challenge">
+      <app-captcha-image [text]="challenge.math!.a + ' ' + challenge.math!.op + ' ' + challenge.math!.b"></app-captcha-image>
       <input type="text"
              formControlName="answer"
              placeholder="Enter your answer"
              autocomplete="off">
-      <div *ngIf="captchaForm.controls['answer'].invalid && captchaForm.controls['answer'].touched" class="error">
-        Please enter a valid number.
-      </div>
     </div>
 
-    <!-- Text challenge -->
     <div *ngIf="challenge.type === 'text'" class="text-challenge">
+      <app-captcha-image [text]="challenge.text!.value"></app-captcha-image>
       <input type="text"
              formControlName="answer"
              maxlength="6"
              placeholder="Type the characters"
              autocomplete="off">
-      <div *ngIf="captchaForm.controls['answer'].invalid && captchaForm.controls['answer'].touched" class="error">
-        Please enter the characters (max 6).
-      </div>
     </div>
 
     <button type="submit"
             class="submit-btn"
-            [disabled]="challenge.type === 'image'
-                        ? (challenge.answer.length > 0 && !captchaForm.valid)
-                        : !captchaForm.valid">
+            [disabled]="!captchaForm.valid">
       Next
     </button>
   </form>

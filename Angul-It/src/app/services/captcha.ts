@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 
-export type ChallengeType = 'math' | 'image' | 'text';
+// CHANGE 1: Simplified the types to only include math and text.
+export type ChallengeType = 'math' | 'text';
 
 export interface CaptchaChallenge {
   type: ChallengeType;
   prompt: string;
-  images?: { src: string; alt: string; selected?: boolean }[];
+  // The 'images' property is no longer needed.
   math?: { a: number; b: number; op: '+' | '-' };
   text?: { value: string };
   answer: any;
@@ -27,91 +28,33 @@ export class CaptchaService {
   }
 
   private generateChallenges() {
-    // Generate 5 random challenges per session
     this.challenges = [];
-    for (let i = 0; i < 5; i++) {
-      const type = (['math', 'image', 'text'][Math.floor(Math.random() * 3)] as ChallengeType);
+    // Generate 3 random challenges per session (you can change this number)
+    for (let i = 0; i < 3; i++) {
+      // CHANGE 2: Randomly pick between only 'math' and 'text'.
+      const type = (['math', 'text'][Math.floor(Math.random() * 2)] as ChallengeType);
+
       if (type === 'math') {
-        const a = Math.floor(Math.random() * 90) + 10;
-        const b = Math.floor(Math.random() * 90) + 10;
-        const op = Math.random() > 0.5 ? '+' : '-';
+        const a = Math.floor(Math.random() * 20) + 1; // Simplified numbers
+        const b = Math.floor(Math.random() * 20) + 1;
+        const op = '+'; // Only using addition for simplicity
         this.challenges.push({
           type: 'math',
-          prompt: `What is ${a} ${op} ${b}?`,
+          prompt: `Solve the problem in the image below.`, // Generic prompt
           math: { a, b, op },
-          answer: op === '+' ? a + b : a - b
+          answer: a + b
         });
-      } else if (type === 'image') {
-        // Static image URLs for categories
-        const categories = [
-          { name: 'tree', urls: [
-            'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=100&q=80',
-            'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=100&q=80'
-          ]},
-          { name: 'car', urls: [
-            'https://images.unsplash.com/photo-1511918984145-48de785d4c4e?auto=format&fit=crop&w=100&q=80',
-            'https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=100&q=80'
-          ]},
-          { name: 'cat', urls: [
-            'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=100&q=80',
-            'https://images.unsplash.com/photo-1518715308788-300e1e1e1e1e?auto=format&fit=crop&w=100&q=80'
-          ]},
-          { name: 'dog', urls: [
-            'https://images.unsplash.com/photo-1518715308788-300e1e1e1e1e?auto=format&fit=crop&w=100&q=80',
-            'https://images.unsplash.com/photo-1508672019048-805c876b67e2?auto=format&fit=crop&w=100&q=80'
-          ]},
-          { name: 'flower', urls: [
-            'https://images.unsplash.com/photo-1465101178521-c1a4c8a1f7c1?auto=format&fit=crop&w=100&q=80',
-            'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=100&q=80'
-          ]},
-          { name: 'mountain', urls: [
-            'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=100&q=80',
-            'https://images.unsplash.com/photo-1465101178521-c1a4c8a1f7c1?auto=format&fit=crop&w=100&q=80'
-          ]}
-        ];
-        const categoryObj = categories[Math.floor(Math.random() * categories.length)];
-        const category = categoryObj.name;
-        // 2 images with category, 7 random images from other categories
-        const images: { src: string; alt: string; selected?: boolean; category?: string }[] = [];
-        categoryObj.urls.forEach(url => {
-          images.push({ src: url, alt: category, selected: false, category });
-        });
-        while (images.length < 9) {
-          const otherCategoryObj = categories.filter(c => c.name !== category)[Math.floor(Math.random() * (categories.length - 1))];
-          const url = otherCategoryObj.urls[Math.floor(Math.random() * otherCategoryObj.urls.length)];
-          images.push({ src: url, alt: otherCategoryObj.name, selected: false, category: otherCategoryObj.name });
-        }
-        // Shuffle images
-        for (let k = images.length - 1; k > 0; k--) {
-          const l = Math.floor(Math.random() * (k + 1));
-          [images[k], images[l]] = [images[l], images[k]];
-        }
-        // Sometimes, allow no correct images (10% chance)
-        let answerAlts: string[] = [];
-        if (Math.random() > 0.1) {
-          answerAlts = images.filter(img => img.alt === category).map(img => img.alt + img.src);
-        }
-        this.challenges.push({
-          type: 'image',
-          prompt: `Select all pictures with ${category} in them`,
-          images: images.map(img => ({
-            src: img.src,
-            alt: img.alt + img.src, // make alt unique for answer checking
-            selected: false
-          })),
-          answer: answerAlts
-        });
-      } else if (type === 'text') {
-        // Generate random 4-6 character string
+      } else if (type === 'text') { // This is now the only other option
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        const len = Math.floor(Math.random() * 3) + 4;
+        const len = Math.floor(Math.random() * 2) + 4; // 4 or 5 characters
         let value = '';
         for (let j = 0; j < len; j++) {
           value += chars[Math.floor(Math.random() * chars.length)];
         }
         this.challenges.push({
           type: 'text',
-          prompt: `Type the characters you see: ${value}`,
+          // CHANGE 3: The prompt is now generic and doesn't reveal the answer.
+          prompt: `Type the characters you see in the image below.`,
           text: { value },
           answer: value
         });
@@ -154,21 +97,17 @@ export class CaptchaService {
     let correct = 0;
     this.challenges.forEach((challenge, idx) => {
       const userAns = this.selections[idx];
+
       if (challenge.type === 'math') {
-        if (userAns && Number(userAns) === challenge.answer) correct++;
-      } else if (challenge.type === 'image') {
-        const selectedAlts = (userAns || []).filter((img: any) => img.selected).map((img: any) => img.alt);
-        if (
-          challenge.answer.length === 0 && selectedAlts.length === 0 // no correct images, user can skip
-          || (
-            selectedAlts.length === challenge.answer.length &&
-            selectedAlts.every((alt: string) => challenge.answer.includes(alt))
-          )
-        ) {
+        // The Number() conversion makes the check more robust.
+        if (userAns && Number(userAns) === challenge.answer) {
           correct++;
         }
       } else if (challenge.type === 'text') {
-        if (userAns && userAns.trim().toUpperCase() === challenge.answer.toUpperCase()) correct++;
+        // The check remains the same: case-insensitive and trims whitespace.
+        if (userAns && userAns.trim().toUpperCase() === challenge.answer.toUpperCase()) {
+          correct++;
+        }
       }
     });
     return {
