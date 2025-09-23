@@ -51,7 +51,7 @@ You can run this project in two ways: locally for development or as a Docker con
 
 #### 1. Clone the repository
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/mahdikheirkhah/Angul-it.git
 ```
 #### 2. Navigate to the project directory
 ```bash
