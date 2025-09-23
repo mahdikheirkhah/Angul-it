@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
 
-// CHANGE 1: Simplified the types to only include math and text.
 export type ChallengeType = 'math' | 'text';
+const CHALLENGES_MIN = 3;
+const CHALLENGES_MAX = 6;
+const MAX_MATH_VALUE = 99;
+const MIN_MATH_VALUE = 1;
+// CHANGE 1: We no longer need a fixed number of challenges here.
 
 export interface CaptchaChallenge {
   type: ChallengeType;
   prompt: string;
-  // The 'images' property is no longer needed.
   math?: { a: number; b: number; op: '+' | '-' };
   text?: { value: string };
   answer: any;
@@ -29,22 +32,41 @@ export class CaptchaService {
 
   private generateChallenges() {
     this.challenges = [];
-    // Generate 3 random challenges per session (you can change this number)
-    for (let i = 0; i < 3; i++) {
-      // CHANGE 2: Randomly pick between only 'math' and 'text'.
+    
+    // CHANGE 2: Generate a random number of challenges between 3 and 6.
+    // The formula is Math.floor(Math.random() * (max - min + 1)) + min
+    const numberOfChallenges = Math.floor(Math.random() * (CHALLENGES_MAX - CHALLENGES_MIN + 1)) + CHALLENGES_MIN;
+
+    for (let i = 0; i < numberOfChallenges; i++) {
       const type = (['math', 'text'][Math.floor(Math.random() * 2)] as ChallengeType);
 
       if (type === 'math') {
-        const a = Math.floor(Math.random() * 20) + 1; // Simplified numbers
-        const b = Math.floor(Math.random() * 20) + 1;
-        const op = '+'; // Only using addition for simplicity
+        let a = Math.floor(Math.random() * (MAX_MATH_VALUE - MIN_MATH_VALUE + 1)) + MIN_MATH_VALUE;
+        let b = Math.floor(Math.random() * (MAX_MATH_VALUE - MIN_MATH_VALUE + 1)) + MIN_MATH_VALUE;
+        
+        // CHANGE 3: Randomly choose between '+' and '-' operators.
+        const operators: Array<'+' | '-'> = ['+', '-'];
+        const op = operators[Math.floor(Math.random() * operators.length)];
+        let answer;
+
+        if (op === '-') {
+          // CHANGE 4: To avoid negative answers, ensure 'a' is the larger number.
+          if (b > a) {
+            [a, b] = [b, a]; // Swap a and b
+          }
+          answer = a - b;
+        } else {
+          answer = a + b;
+        }
+        
         this.challenges.push({
           type: 'math',
-          prompt: `Solve the problem in the image below.`, // Generic prompt
+          prompt: `Solve the problem in the image below.`,
+          // CHANGE 5: Use the dynamically chosen operator and calculated answer.
           math: { a, b, op },
-          answer: a + b
+          answer: answer
         });
-      } else if (type === 'text') { // This is now the only other option
+      } else if (type === 'text') {
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         const len = Math.floor(Math.random() * 2) + 4; // 4 or 5 characters
         let value = '';
@@ -53,7 +75,6 @@ export class CaptchaService {
         }
         this.challenges.push({
           type: 'text',
-          // CHANGE 3: The prompt is now generic and doesn't reveal the answer.
           prompt: `Type the characters you see in the image below.`,
           text: { value },
           answer: value
@@ -99,12 +120,10 @@ export class CaptchaService {
       const userAns = this.selections[idx];
 
       if (challenge.type === 'math') {
-        // The Number() conversion makes the check more robust.
         if (userAns && Number(userAns) === challenge.answer) {
           correct++;
         }
       } else if (challenge.type === 'text') {
-        // The check remains the same: case-insensitive and trims whitespace.
         if (userAns && userAns.trim().toUpperCase() === challenge.answer.toUpperCase()) {
           correct++;
         }

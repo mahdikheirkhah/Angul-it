@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import { trigger, transition, style, animate } from '@angular/animations'; // <-- Import is needed
+import { trigger, transition, style, animate } from '@angular/animations';
 
 import { CaptchaService, CaptchaChallenge } from '../../services/captcha';
 import { CaptchaImage } from '../captcha-image/captcha-image';

@@ -6,7 +6,6 @@ describe('CaptchaService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      // THIS IS THE FIX: Provide the service here to get a fresh instance for this test suite.
       providers: [CaptchaService]
     });
     service = TestBed.inject(CaptchaService);

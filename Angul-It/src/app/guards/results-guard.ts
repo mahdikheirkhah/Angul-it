@@ -7,10 +7,9 @@ export const resultsGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
 
   if (captchaService.isCompleted()) {
-    return true; // User has completed the challenges, allow access
+    return true;
   } else {
-    // User has not completed, redirect to the captcha page
     router.navigate(['/captcha']);
-    return false; // Block access to the results page
+    return false;
   }
 };
